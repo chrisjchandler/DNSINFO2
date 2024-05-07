@@ -2,13 +2,22 @@ package main
 
 import (
     "encoding/json"
+    "fmt"
+    "log"
     "net/http"
     "os/exec"
     "strings"
-    "fmt"
 )
 
-// DNSRecords specifies the record sets
+// config holds server configuration
+type Config struct {
+    UseTLS     bool   // Enable TLS
+    CertFile   string // Path to certificate file
+    KeyFile    string // Path to key file
+    ServerPort string // Server port
+}
+
+// DNSRecords structure for DNS reply
 type DNSRecords struct {
     A     []string `json:"a,omitempty"`
     AAAA  []string `json:"aaaa,omitempty"`
@@ -18,17 +27,14 @@ type DNSRecords struct {
     TXT   []string `json:"txt,omitempty"`
 }
 
-// set default recursive
-const defaultResolver = "8.8.8.8" // Google is the default
-
-// handleDNSQuery 
+// handleDNSQuery query handler
 func handleDNSQuery(w http.ResponseWriter, r *http.Request) {
     domain := r.URL.Query().Get("domain")
     nameserver := r.URL.Query().Get("nameserver")
 
-    // Determine nameserver 
+    // Use a default recursive if none is provided
     if nameserver == "" {
-        nameserver = defaultResolver // hardcoded default if no resolver specified
+        nameserver = "8.8.8.8" // Example default resolver
     }
 
     records, err := queryAllRecordTypes(domain, nameserver)
@@ -41,7 +47,7 @@ func handleDNSQuery(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(records)
 }
 
-// queryAllRecordTypes digs for all DNS record types & outputs
+// queryAllRecordTypes performs dig for all DNS types
 func queryAllRecordTypes(domain, nameserver string) (DNSRecords, error) {
     records := DNSRecords{}
     recordTypes := map[string]string{
@@ -64,8 +70,8 @@ func queryAllRecordTypes(domain, nameserver string) (DNSRecords, error) {
     return records, nil
 }
 
-// parseDigOutput  parses by record type 
-func parseDigOutput(recordType, output string, records *DNSRecords) {
+// parseDigOutput parses output from dig command by record type
+func parseDigOutput(recordType string, output string, records *DNSRecords) {
     results := strings.Split(output, "\n")
     switch recordType {
     case "A":
@@ -86,6 +92,20 @@ func parseDigOutput(recordType, output string, records *DNSRecords) {
 }
 
 func main() {
+    config := Config{
+        UseTLS:     true,             // enable or disable TLS
+        CertFile:   "server.crt",     // Cert 4 TLS
+        KeyFile:    "server.key",     // Key for TLS
+        ServerPort: "8080",           // listening port
+    }
+
     http.HandleFunc("/dns-query", handleDNSQuery)
-    http.ListenAndServe(":8080", nil)
+
+    if config.UseTLS {
+        log.Printf("Starting HTTPS server on port %s", config.ServerPort)
+        log.Fatal(http.ListenAndServeTLS(":"+config.ServerPort, config.CertFile, config.KeyFile, nil))
+    } else {
+        log.Printf("Starting HTTP server on port %s", config.ServerPort)
+        log.Fatal(http.ListenAndServe(":"+config.ServerPort, nil))
+    }
 }
