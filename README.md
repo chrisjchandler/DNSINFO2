@@ -48,8 +48,26 @@ Might be overkill if you just want an IP address.
 Why Use This?
 Maybe you're a sysadmin, or maybe you're just nosy. Whatever your reasons, I don't judge. you crave DNS info, this gets it for you. End of story.
 
+Now with TLS!
+
+Configuration Options
+UseTLS: Set this to true to enable TLS (HTTPS), or false to disable it (HTTP).
+CertFile: Path to the TLS certificate file.
+KeyFile: Path to the TLS private key file.
+ServerPort: Port number on which the server will listen.
+Enabling TLS
+To enable TLS, you need to provide a valid certificate and private key file. Once you have these files:
+
+Set the UseTLS flag to "true" in the configuration.
+Provide paths for CertFile and KeyFile with your certificate and key.
+Ensure the ServerPort is set to an appropriate value for HTTPS (e.g., 443 or any other if using a custom configuration).
+
+use curl -k to query the api and validate ssl functionality 
+
+e.g "curl -k https://localhost:{port}/dns-query?domain=cnn.com"
 Contributing
 Found a bug? Open an issue. 
 
 License
 Do what you want with it I don't care
+
