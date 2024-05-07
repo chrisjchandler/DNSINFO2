@@ -93,7 +93,7 @@ func parseDigOutput(recordType string, output string, records *DNSRecords) {
 
 func main() {
     config := Config{
-        UseTLS:     true,             // enable or disable TLS
+        UseTLS:     false,             // enable or disable TLS
         CertFile:   "server.crt",     // Cert 4 TLS
         KeyFile:    "server.key",     // Key for TLS
         ServerPort: "8080",           // listening port
